@@ -16,7 +16,7 @@ export class PessoaFiltro {
 })
 export class PessoaService {
 
-  //pessoasUrl = 'http://localhost:8080/pessoas';
+  // pessoasUrl = 'http://localhost:8080/pessoas';
   pessoasUrl: string;
   cidadesUrl: string;
   estadosUrl: string;
@@ -28,7 +28,7 @@ export class PessoaService {
    }
 
   pesquisar (filtro: PessoaFiltro): Promise<any> {
-    //const headers = new HttpHeaders().append('Authorization', 'Basic YWRtaW5AYWxnYW1vbmV5LmNvbTphZG1pbg==');
+    // const headers = new HttpHeaders().append('Authorization', 'Basic YWRtaW5AYWxnYW1vbmV5LmNvbTphZG1pbg==');
 
     /* Alterado abaixo, de forma mais elegante
     let params = new HttpParams();

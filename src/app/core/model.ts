@@ -61,3 +61,118 @@ export class Lancamento {
   anexo: string;
   urlAnexo: string;
 }
+
+export class Area {
+  id: number;
+  geo_json = {};
+  name: string;
+  center = [];
+  area: number;
+  user_id: string;
+  created_at: Date;
+}
+
+export class AreaImagem {
+  dt: Date;
+  type: string;
+  dc: number;
+  cl: number;
+  sun: {};
+  image: {
+    truecolor: string;
+    falsecolor: string;
+    ndvi: string;
+    evi: string;
+    evi2: string;
+    dswi: string;
+    ndwi: string;
+    nri: string;
+  };
+  tile: {
+    truecolor: string;
+    falsecolor: string;
+    ndvi: string;
+    evi: string;
+    evi2: string;
+    dswi: string;
+    ndwi: string;
+    nri: string;
+  };
+  stats: {
+    ndvi: string;
+    evi: string;
+    evi2: string;
+    dswi: string;
+    ndwi: string;
+    nri: string;
+  };
+  data: {
+    truecolor: string;
+    falsecolor: string;
+    ndvi: string;
+    evi: string;
+    evi2: string;
+    dswi: string;
+    ndwi: string;
+    nri: string;
+  };
+}
+
+export class Historico {
+  dt: Date;
+  type: string;
+  zoom: number;
+  dc: number;
+  cl: number;
+  data: {
+    std: string;
+    p75: string;
+    min: string;
+    max: string;
+    median: string;
+    p25: string;
+    num: string;
+    mean: string;
+  };
+}
+
+export class AreaEstatisticas {
+  std: number;
+  p25: number;
+  num: number;
+  min: number;
+  max: number;
+  median: number;
+  p75: number;
+  mean: number;
+}
+
+export class EstatisticaTable {
+  key: string;
+  value: string;
+}
+
+export class TreeImagens {
+  data = new Array<TreeDados>();
+}
+
+export class TreeDados {
+  label: string;
+  data: string;
+  expandedIcon: string;
+  collapsedIcon: string;
+  children = new Array<TreeDados>();
+}
+
+export interface Product {
+  id?:string;
+  code?:string;
+  name?:string;
+  description?:string;
+  price?:number;
+  quantity?:number;
+  inventoryStatus?:string;
+  category?:string;
+  image?:string;
+  rating?:number;
+}

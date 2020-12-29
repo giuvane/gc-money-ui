@@ -14,6 +14,8 @@ const routes: Routes = [
   { path: 'pessoas', loadChildren: './pessoas/pessoas.module#PessoasModule' },
   { path: 'dashboard', loadChildren: './dashboard/dashboard.module#DashboardModule' },
   { path: 'relatorios', loadChildren: './relatorios/relatorios.module#RelatoriosModule' },
+  { path: 'mapas', loadChildren: './mapas/mapas.module#MapasModule' },
+  { path: 'sr', loadChildren: './sr/sr.module#SrModule' },
 
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'nao-autorizado', component: NaoAutorizadoComponent },

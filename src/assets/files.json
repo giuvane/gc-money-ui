@@ -1,0 +1,43 @@
+{
+  "data":
+  [
+      {
+          "label": "25/01/2020",
+          "data": "Documents Folder",
+          "expandedIcon": "pi pi-folder-open",
+          "collapsedIcon": "pi pi-folder",
+          "children": [{
+                  "label": "Image",
+                  "data": "Work Folder",
+                  "expandedIcon": "pi pi-folder-open",
+                  "collapsedIcon": "pi pi-folder",
+                  "children": [{"label": "True color", "icon": "pi pi-file", "data": "Expenses Document"},
+                               {"label": "False color", "icon": "pi pi-file", "data": "Resume Document"},
+                               {"label": "NDVI", "icon": "pi pi-file", "data": "Resume Document"},
+                               {"label": "EVI 1", "icon": "pi pi-file", "data": "Resume Document"},
+                               {"label": "EVI 2", "icon": "pi pi-file", "data": "Resume Document"},
+                               {"label": "NRI", "icon": "pi pi-file", "data": "Resume Document"},
+                               {"label": "DSWI", "icon": "pi pi-file", "data": "Resume Document"},
+                               {"label": "NDWI", "icon": "pi pi-file", "data": "Resume Document"}
+                              ]
+              },
+              {
+                  "label": "Tile",
+                  "data": "Home Folder",
+                  "expandedIcon": "pi pi-folder-open",
+                  "collapsedIcon": "pi pi-folder",
+                  "children": [{"label": "Invoices.txt", "icon": "pi pi-file", "data": "Invoices for this month"}]
+              }]
+      },
+      {
+          "label": "30/01/2020",
+          "data": "Pictures Folder",
+          "expandedIcon": "pi pi-folder-open",
+          "collapsedIcon": "pi pi-folder",
+          "children": [
+              {"label": "barcelona.jpg", "icon": "pi pi-image", "data": "Barcelona Photo"},
+              {"label": "logo.jpg", "icon": "pi pi-image", "data": "PrimeFaces Logo"},
+              {"label": "primeui.png", "icon": "pi pi-image", "data": "PrimeUI Logo"}]
+      }
+  ]
+}

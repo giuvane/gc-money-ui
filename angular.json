@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/algamoney-ui",
+            "outputPath": "dist/gc-money",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -119,11 +119,11 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "algamoney-ui:serve"
+            "devServerTarget": "gc-money:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "algamoney-ui:serve:production"
+              "devServerTarget": "gc-money:serve:production"
             }
           }
         }

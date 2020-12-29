@@ -5,6 +5,10 @@
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080',
+  agroApiUrl: 'http://api.agromonitoring.com/agro/1.0',
+  bingMapsKey: 'AikcqJh-VT5_8KBzed95Ir6KMXqvXVwWekNOjhH44zrLbXLCu7D6-aO4gXpHZSrU',
+  adb: 'https://adb.md.utfpr.edu.br',
+  adbAuth: 'https://adb.md.utfpr.edu.br/api/data/v2',
 
   tokenWhitelistedDomains: [ new RegExp('localhost:8080') ],
   tokenBlacklistedRoutes: [ new RegExp('\/oauth\/token') ]

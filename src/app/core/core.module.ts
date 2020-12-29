@@ -26,6 +26,8 @@ import { NaoAutorizadoComponent } from './nao-autorizado.component';
 import { DashboardService } from '../dashboard/dashboard.service';
 import { CategoriaService } from '../categorias/categoria.service';
 import { RelatorioService } from '../relatorios/relatorio.service';
+import { MapasService } from '../mapas/mapas.service';
+import { SrService } from '../sr/sr.service';
 import { MoneyHttp } from '../seguranca/money-http';
 
 // Método utilizado para aplicar o locale da app para pt-BR
@@ -65,6 +67,8 @@ registerLocaleData(localePt);
     CategoriaService,
     DashboardService,
     RelatorioService,
+    MapasService,
+    SrService,
     ErrorHandlerService,
     AuthService,
     MoneyHttp,

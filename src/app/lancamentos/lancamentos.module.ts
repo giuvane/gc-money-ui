@@ -49,7 +49,7 @@ import { LancamentosRoutingModule } from './lancamentos-routing.module';
     LancamentosRoutingModule
   ],
   exports: [
-    // Nâo não é mais utilizado em app.component.html, não é mais necessário exportar
+    // Nâo é mais utilizado em app.component.html, não é mais necessário exportar
     // LancamentoCadastroComponent,
     // LancamentosPesquisaComponent
   ]

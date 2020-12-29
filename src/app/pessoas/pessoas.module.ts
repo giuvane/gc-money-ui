@@ -25,7 +25,7 @@ import { PessoaCadastroContatoComponent } from './pessoa-cadastro-contato/pessoa
     PessoaCadastroContatoComponent
   ],
   imports: [
-  CommonModule,
+    CommonModule,
     FormsModule,
     RouterModule,
 

@@ -1,0 +1,123 @@
+<div class="container">
+
+  <form autocomplete="off" (ngSubmit)="pesquisar()">
+
+    <div class="ui-g">
+
+      <div class="ui-g-12">
+        <label style="display: block">Período</label>
+        <p-calendar dateFormat="dd/mm/yy" [inputStyle]="{ width: '250px' }"
+          name="dataInicio" [(ngModel)]="filtro.dataImagensInicio"></p-calendar>
+
+        <label> até </label>
+        <p-calendar dateFormat="dd/mm/yy" [inputStyle]="{ width: '250px' }"
+          name="dataFim" [(ngModel)]="filtro.dataImagensFim">
+        </p-calendar>
+
+        <p-dropdown class="espaco-botoes" [options]="ivs" [(ngModel)]="selectedIv" [ngModelOptions]="{standalone: true}" placeholder="Selecione um IV"
+          optionLabel="name" [showClear]="true" (onChange)="changeDropdownIv($event)">
+        </p-dropdown>
+
+        <p-dropdown class="espaco-botoes" [options]="paletas" [(ngModel)]="paleta" [ngModelOptions]="{standalone: true}" placeholder="Selecione uma paleta"
+          optionLabel="name" [showClear]="true" (onChange)="changePaleta($event)">
+        </p-dropdown>
+
+        <button class="espaco-botoes" pButton (click)="showDialog()" icon="pi pi-info-circle" pTooltip="Informação sobre Paletas" tooltipPosition="top"></button>
+
+        <p-dialog header="Paletas de IVs" [(visible)]="display">
+            Paleta 1: Paleta verde. Comum para se utilizar em NDVI. <a target="_blank" href="https://agromonitoring.com/themes/agri/assets/img/Agro_palette_1.png">Link</a><br>
+            Paleta 2: Paleta técnica. Escalas de cinza. <a target="_blank" href="https://agromonitoring.com/themes/agri/assets/img/Agro_palette_2.png">Link</a><br>
+            Paleta 3: Paleta contraste 1. Comum para se utilizar em IVs para realçar zonas. <a target="_blank" href="https://agromonitoring.com/themes/agri/assets/img/Agro_palette_3.png">Link</a><br>
+            Paleta 4: Paleta contraste 2. Comum para se utilizar em IVs para realçar zonas. <a target="_blank" href="https://agromonitoring.com/themes/agri/assets/img/Agro_palette_4.png">Link</a>
+        </p-dialog>
+
+        <button class="espaco-botoes" pButton type="submit" label="Pesquisar"></button>
+      </div>
+
+      <div class="ui-g-12">
+        <p-panel header="Imagens" [toggleable]="true" [transitionOptions]="'3ms'" [collapsed]="true">
+            <p-pickList [source]="sourceImagens" [target]="targetImagens" sourceHeader="Imagens disponíveis" targetHeader="Imagens selecionadas" dragdrop="true"
+               filterBy="dt" sourceFilterPlaceholder="Pesquisar pela data" targetFilterPlaceholder="Pesquisar pela data"
+               [responsive]="true" [showSourceControls]='false' [showTargetControls]='false' (onSourceSelect)="sourceSelect($event)" (onTargetSelect)="targetSelect($event)">
+              <ng-template pTemplate="emptymessagesource">
+                Não há imagens para exibir
+              </ng-template>
+              <ng-template pTemplate="emptymessagetarget">
+                Não há imagens para exibir
+              </ng-template>
+
+              <ng-template let-areaimagem pTemplate="item">
+                  <div class="product-item">
+                      <div class="image-container">
+                        <img src="{{areaimagem.image.truecolor}}" [alt]="areaimagem.dt" class="product-image" />
+                      </div>
+                      <div class="product-list-detail">
+                        <h5 class="p-mb-2">{{this.unixTimestampToDate(areaimagem.dt) | date: 'dd/MM/yyyy'}}</h5>
+                        <i class="pi pi-camera product-category-icon"></i>
+                        <span class="product-category">{{areaimagem.type}}</span>
+                      </div>
+                      <div class="product-list-action">
+                        <i class="fa fa-cloud product-category-icon"></i>
+                        <h6 class="p-mb-2">{{areaimagem.cl}}%</h6>
+                        <i class="fa fa-picture-o product-category-icon"></i>
+                        <span class="product-category">{{areaimagem.dc}}%</span>
+                      </div>
+                  </div>
+              </ng-template>
+            </p-pickList>
+
+            <br>
+            <a pButton label="PNG" icon="pi pi-image" class="espaco-botoes" name="imagemPng" target="_blank" pTooltip="Abrir Png" tooltipPosition="top" [href]="png"></a>
+
+            <a pButton label="TIF" icon="pi pi-download" class="espaco-botoes" name="imagemTif" pTooltip="Baixar Tif" tooltipPosition="top" [href]="tif"></a>
+
+            <button pButton class="espaco-botoes" label="Vetorizar" icon="pi pi-cloud" pTooltip="Vetorizar para ADB" tooltipPosition="top" (click)="lerTiff($event)"></button>
+        </p-panel>
+      </div>
+
+      <!-- Open Layers-->
+      <div class="ui-g-12">
+        <div id="map" class="map" #map>
+        </div>
+      </div>
+
+      <div class="ui-g-3">
+        <p-panel header="Estatísticas" [toggleable]="true" [transitionOptions]="'3ms'" [collapsed]="true">
+          <p-table [value]="estatisticas" #tabela>
+            <ng-template pTemplate="caption">
+                {{dataEstatistica}}
+            </ng-template>
+            <ng-template pTemplate="header">
+                <tr>
+                    <th></th>
+                    <th>{{tituloEstatistica}}</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-estatisticatable>
+                <tr>
+                    <td>{{estatisticatable.key}}</td>
+                    <td>{{estatisticatable.value}}</td>
+                </tr>
+            </ng-template>
+          </p-table>
+        </p-panel>
+      </div>
+
+      <div class="ui-g-9">
+        <p-panel header="Histórico" [toggleable]="true" [transitionOptions]="'10ms'" [collapsed]="true">
+          Filtros:
+          <p-dropdown class="espaco-botoes" [options]="filtroNuvens" [(ngModel)]="selectedFiltroNuvens" [ngModelOptions]="{standalone: true}"
+            placeholder="% de nuvens" optionLabel="name" [showClear]="true" (onChange)="changeDropdownFiltroNuvens($event)">
+          </p-dropdown>
+          <p-dropdown class="espaco-botoes" [options]="filtroSat" [(ngModel)]="selectedFiltroSat" [ngModelOptions]="{standalone: true}"
+            placeholder="Filtrar Satélite" optionLabel="name" [showClear]="true" (onChange)="changeDropdownFiltroSat($event)">
+          </p-dropdown>
+          <br/>
+          <p-chart type="line" [data]="data" (onDataSelect)="selectData($event)"></p-chart>
+        </p-panel>
+      </div>
+
+    </div>
+
+  </form>
+</div>

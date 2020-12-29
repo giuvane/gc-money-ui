@@ -1,0 +1,70 @@
+<div class="container">
+  <div class="ui-g">
+
+    <form autocomplete="off" (ngSubmit)="pesquisar()">
+
+      <div class="ui-g-1">
+        <img src="https://adb.md.utfpr.edu.br/map/assets/images/logo_bb_min.png" width="50" height="50">
+      </div>
+      <div class="ui-g-11">
+        <h1>AgDataBox - Sensoriamento Remoto</h1>
+      </div>
+
+      <div class="ui-g-12 ui-fluid" >
+        <label>Descrição</label>
+        <input pInputText type="text" name="descricao" [(ngModel)]="filtro.descricao">
+      </div>
+
+      <div class="ui-g-12">
+        <button pButton type="submit" label="Pesquisar"></button>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="ui-g">
+    <div class="ui-g-12">
+
+      <!-- Listagem de lançamentos (todo o p-table) foi migrado pra um componente -->
+      <!--<app-lancamentos-grid [lancamentos]="lancamentos"></app-lancamentos-grid>-->
+      <p-table [value]="areas" [responsive]="true"
+        [paginator]="true" [rows]="filtro.itensPorPagina" [lazy]="true" [totalRecords]="totalRegistros"
+        (onLazyLoad)="aoMudarPagina($event)"
+        #tabela>
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Descrição</th>
+              <th>Área</th>
+              <th>Imagens</th>
+              <th class="col-acoes-header"> <!--<button pButton label="Teste"></button>--></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-area>
+            <tr>
+              <td>{{ area.name }}</td>
+              <td>{{ area.area }}</td>
+              <td><a class="espaco-icones" icon="fa fa-pencil" pTooltip="Acessar imagens" tooltipPosition="top"
+                [routerLink]="['/sr/imagens', area.id]">Mapa</a></td>
+              <td class="col-acoes-content">
+
+                <!--ESTÁ DIFERENTE DA AULA: espaco-icones implementado para manter espaço entre link e botão-->
+                <a pButton class="espaco-icones" icon="fa fa-pencil" pTooltip="Editar" tooltipPosition="top"
+                  [routerLink]="['/sr', area.id]"></a>
+                <button pButton class="espaco-icones" icon="fa fa-trash" pTooltip="Excluir" tooltipPosition="top"
+                  (click)="confirmarExclusao(area)"
+                  [disabled]="!auth.temPermissao('ROLE_REMOVER_LANCAMENTO')"></button>
+
+            </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+              Nenhuma área encontrada
+          </ng-template>
+        </p-table>
+    </div>
+    <div class="ui-g-12">
+      <a pButton label="Nova Área" routerLink="/sr/novo"></a>
+    </div>
+
+  </div>
+</div>
