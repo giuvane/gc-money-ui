@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { MoneyHttp } from '../seguranca/money-http';
 import { environment } from './../../environments/environment';
 
@@ -11,6 +11,11 @@ export class AreaFiltro {
   descricao: string;
   pagina = 0;
   itensPorPagina = 5;
+}
+
+export class LoginAdb {
+  login: string;
+  password: string;
 }
 
 export class ImagensFiltro {
@@ -31,22 +36,28 @@ export class ImagensFiltro {
 export class SrService {
 
   srUrl: string;
-  appid: string;
+  adbAuthbUrl: string;
+  adbUrl: string
+  agroApiUrl: string;
+  agroApiKey: string;
 
-  constructor(private http: MoneyHttp) {
+  constructor(private http: MoneyHttp, private httpClient: HttpClient,) {
     // this.srUrl = `${environment.agroApiUrl}/polygons`;
-    this.appid = '6475da62dd1776f8852048627272aad0'; // APIKEy do Agro API
+    this.agroApiKey = '6475da62dd1776f8852048627272aad0'; // APIKEy do Agro API
+    this.srUrl = `${environment.apiUrl}`;
+    this.adbAuthbUrl = `${environment.adbAuth}`;
+    this.adbUrl = `${environment.adb}`;
   }
 
   carregarInformacoesPoligono(polyid: string) {
 
-    this.srUrl = `${environment.agroApiUrl}/polygons/${polyid}`;
+    this.agroApiUrl = `${environment.agroApiUrl}/polygons/${polyid}`;
 
     let params = new HttpParams();
 
-    params = params.append('appid', this.appid);
+    params = params.append('appid', this.agroApiKey);
 
-    return this.http.get<any>(`${this.srUrl}`, { params })
+    return this.http.get<any>(`${this.agroApiUrl}`, { params })
       .toPromise()
       .then(response => {
         // const areas = response.content; busca com .content removida pq não estava retornando json
@@ -61,13 +72,13 @@ export class SrService {
   }
 
   carregarEstatisticasArea(url: string) {
-    this.srUrl = url;
+    this.agroApiUrl = url;
 
     //let params = new HttpParams();
 
     //params = params.append('appid', this.appid);
 
-    return this.http.get<any>(`${this.srUrl}`)
+    return this.http.get<any>(`${this.agroApiUrl}`)
       .toPromise()
       .then(response => {
         // const areas = response.content; busca com .content removida pq não estava retornando json
@@ -83,16 +94,16 @@ export class SrService {
 
   // Método utilizado para gerar gráfico estatístico do NDVI da área
   carregarHistoricoArea(polyid: string, dataInicio: any, dataFim: any) {
-    this.srUrl = `${environment.agroApiUrl}/ndvi/history`;
+    this.agroApiUrl = `${environment.agroApiUrl}/ndvi/history`;
 
     let params = new HttpParams();
 
-    params = params.append('appid', this.appid);
+    params = params.append('appid', this.agroApiKey);
     params = params.append('polyid', polyid);
     params = params.append('start', dataInicio);
     params = params.append('end', dataFim);
 
-    return this.http.get<any>(`${this.srUrl}`, { params })
+    return this.http.get<any>(`${this.agroApiUrl}`, { params })
       .toPromise()
       .then(response => {
         // const areas = response.content; busca com .content removida pq não estava retornando json
@@ -108,7 +119,7 @@ export class SrService {
 
   pesquisarAreas(filtro: AreaFiltro): Promise<any> {
 
-    this.srUrl = `${environment.agroApiUrl}/polygons`;
+    this.agroApiUrl = `${environment.agroApiUrl}/polygons`;
 
     let params = new HttpParams({
       fromObject: {
@@ -117,9 +128,9 @@ export class SrService {
       }
     });
 
-    params = params.append('appid', this.appid);
+    params = params.append('appid', this.agroApiKey);
 
-    return this.http.get<any>(`${this.srUrl}`, { params })
+    return this.http.get<any>(`${this.agroApiUrl}`, { params })
       .toPromise()
       .then(response => {
         // const areas = response.content; busca com .content removida pq não estava retornando json
@@ -140,16 +151,16 @@ export class SrService {
 
   pesquisarImagens(filtro: ImagensFiltro, polyid: string, dataInicio: any, dataFim: any): Promise<any> {
 
-    this.srUrl = `${environment.agroApiUrl}/image/search`;
+    this.agroApiUrl = `${environment.agroApiUrl}/image/search`;
 
     let params = new HttpParams();
 
-    params = params.append('appid', this.appid);
+    params = params.append('appid', this.agroApiKey);
     params = params.append('polyid', polyid);
     params = params.append('start', dataInicio);
     params = params.append('end', dataFim);
 
-    return this.http.get<any>(`${this.srUrl}`, { params })
+    return this.http.get<any>(`${this.agroApiUrl}`, { params })
       .toPromise()
       .then(response => {
         // const areas = response.content; busca com .content removida pq não estava retornando json
@@ -170,11 +181,67 @@ export class SrService {
     //headers = headers.append('Content-Type', 'application/json');
 
     let params = new HttpParams();
-    params = params.set('appid', this.appid);
+    params = params.set('appid', this.agroApiKey);
 
     return this.http.post<Area>(
-      this.srUrl, area, {params})
+      this.agroApiUrl, area, {params})
       //this.srUrl, area)
       .toPromise();
+  }
+
+  vetorizarTif(link: string, nomeLayer: string): Promise<any> {
+
+    let params = new HttpParams();
+    params = params.set('link', link);
+    params = params.set('nomeLayer', nomeLayer);
+
+    return this.http.get<any>(`${this.srUrl}/sr`, {params})
+      .toPromise()
+      .then(response => {
+        const json = response;
+        return json;
+      });
+  }
+
+  gerarTokenAdb(login: string, password: string): Promise<any> {
+
+    const body = JSON.stringify({ login, password });
+
+    return this.http.post<any>(`${this.adbAuthbUrl}`, body, {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/plain',
+      },
+      responseType: 'text' as 'json',
+    })
+      .toPromise()
+      .then(response => {
+        const token = response;
+        return token;
+      });
+  }
+
+  integrarAdb(token: string, json: string, projectId: string): Promise<any> {
+
+    let headers = new HttpHeaders().append('Authorization', token);
+    headers = headers.append('Content-Type', 'application/json');
+    headers = headers.append('Accept', 'text/json');
+
+    console.log(token);
+    console.log(json);
+
+    return this.http.post<any>(`${this.adbUrl}/api/map/project/${projectId}/layer`, json,
+      {
+        headers: {
+          Authorization: token,
+          'Content-Type': 'application/json',
+          Accept: 'text/json',
+        }
+      }
+      )
+      .toPromise()
+      .then(response => {
+        return response;
+      });
   }
 }

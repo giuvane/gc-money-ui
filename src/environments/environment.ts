@@ -8,9 +8,13 @@ export const environment = {
   agroApiUrl: 'http://api.agromonitoring.com/agro/1.0',
   bingMapsKey: 'AikcqJh-VT5_8KBzed95Ir6KMXqvXVwWekNOjhH44zrLbXLCu7D6-aO4gXpHZSrU',
   adb: 'https://adb.md.utfpr.edu.br',
-  adbAuth: 'https://adb.md.utfpr.edu.br/api/data/v2',
+  adbAuth: 'https://adb.md.utfpr.edu.br/api/data/v2/auth/login',
 
-  tokenWhitelistedDomains: [ new RegExp('localhost:8080') ],
+  tokenWhitelistedDomains: [
+    new RegExp('localhost:8080'),
+    new RegExp('adb.md.utfpr.edu.br')
+  ],
+  //tokenWhitelistedDomains: [ 'localhost:8080', 'https://adb.md.utfpr.edu.br', 'https://adb.md.utfpr.edu.br/api/data/v2/auth/login' ],
   tokenBlacklistedRoutes: [ new RegExp('\/oauth\/token') ]
 
   // tokenWhitelistedDomains: [ /localhost:8080/ ],

@@ -124,6 +124,9 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
   // Dialog
   display: boolean = false;
 
+  // ADB
+  token: string;
+
   constructor(
     private srService: SrService,
     private toasty: ToastyService,
@@ -475,7 +478,11 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
     });
   }
 
-  async lerTiff() {
+  lerTiff(event) {
+
+    let login = 'giuvane.conti@gmail.com';
+    let senha = '123456';
+    let projectId = '6009c5932a0457001a17c319';
 
     let tiffSelecionado;
 
@@ -497,17 +504,34 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
       tiffSelecionado = this.imagemSelecionada.data.falsecolor;
     }
 
-    fromUrl(tiffSelecionado)
-    .then(tiff => {
-      // console.log(tiff);
-    });
+    let nomeLayer = 'teste';
 
-    /*
-    const response = await fetch(tiffSelecionado);
-    const arrayBuffer = await response.arrayBuffer();
-    const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
-    console.log(tiff);
-    */
+    this.srService.vetorizarTif(tiffSelecionado, nomeLayer)
+      .then(resultado => {
+        this.token = resultado;
+        console.log(resultado);
+        this.gerarTokenAdb(login, senha, resultado, projectId);
+      })
+      .catch(erro => this.errorHandler.handle(erro));
+
+  }
+
+  gerarTokenAdb(login: string, senha: string, json: string, projectId: string) {
+    this.srService.gerarTokenAdb(login, senha)
+        .then(resultado => {
+          const token = resultado;
+          //console.log(token);
+          this.integrarAdb(token, json, projectId);
+        })
+        .catch(erro => this.errorHandler.handle(erro));
+  }
+
+  integrarAdb(token: string, json: string, projectId: string) {
+    this.srService.integrarAdb(token, json, projectId)
+        .then(json => {
+          console.log(json);
+        })
+        .catch(erro => this.errorHandler.handle(erro));
   }
 
   downloadPng() {
