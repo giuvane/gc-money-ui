@@ -62,6 +62,14 @@ export class Lancamento {
   urlAnexo: string;
 }
 
+export class AgroApiKey {
+  codigo: number;
+  nome: string;
+  apikey: string;
+  ativo = true;
+  usuario: string;
+}
+
 export class Area {
   id: number;
   geo_json = {};

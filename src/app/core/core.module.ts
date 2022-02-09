@@ -28,7 +28,9 @@ import { CategoriaService } from '../categorias/categoria.service';
 import { RelatorioService } from '../relatorios/relatorio.service';
 import { MapasService } from '../mapas/mapas.service';
 import { SrService } from '../sr/sr.service';
+import { AgroapikeyService } from '../agroapikey/agroapikey.service';
 import { MoneyHttp } from '../seguranca/money-http';
+
 
 // Método utilizado para aplicar o locale da app para pt-BR
 registerLocaleData(localePt);
@@ -69,6 +71,7 @@ registerLocaleData(localePt);
     RelatorioService,
     MapasService,
     SrService,
+    AgroapikeyService,
     ErrorHandlerService,
     AuthService,
     MoneyHttp,

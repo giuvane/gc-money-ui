@@ -1,0 +1,63 @@
+<div class="container">
+  <div class="ui-g">
+
+    <form autocomplete="off" (ngSubmit)="pesquisar()">
+
+      <div class="ui-g-12">
+        <h1>Agro Api Keys</h1>
+      </div>
+      <div class="ui-g-12 ui-fluid">
+        <label>Nome</label>
+        <input pInputText type="text" name="nome" >
+      </div>
+      <div class="ui-g-12">
+        <button pButton type="submit" label="Pesquisar"></button>
+      </div>
+
+    </form>
+
+  </div>
+
+  <div class="ui-g">
+      <div class="ui-g-12">
+
+        <!-- Lista de pessoas movida para o componente pessoas-grid -->
+        <!--<app-pessoas-grid [pessoas]="pessoas"></app-pessoas-grid>-->
+        <p-table [value]="agroapikeys" [responsive]=true
+          [paginator]="true" [rows]="filtro.itensPorPagina" [lazy]="true" [totalRecords]="totalRegistros"
+          (onLazyLoad)="aoMudarPagina($event)"
+          #tabela>
+          <ng-template pTemplate="header">
+              <tr>
+                <th>Nome</th>
+                <th>API Key</th>
+                <th class="col-data"></th>
+              </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-pessoa>
+              <tr>
+                <td>{{ agroapikey.nome }}</td>
+                <td>{{ agroapikey.apikey }}</td>
+                <td class="col-acoes">
+                  <a class="espaco-icones" pButton pTooltip="Editar" tooltipPosition="top" icon="fa fa-pencil"
+                   [routerLink]="['/agroapikey', agroapikey.codigo]"></a>
+                  <button class="espaco-icones" pButton pTooltip="Excluir" tooltipPosition="top" icon="fa fa-trash"
+                    (click)="confirmarExclusao(agroapikey)"></button>
+                </td>
+              </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+              Nenhuma API Key encontrada
+          </ng-template>
+        </p-table>
+
+      </div>
+  </div>
+
+  <div class="ui-g">
+    <div class="ui-g-12">
+      <a pButton label="Nova API Key" routerLink="/agroapikey/novo"></a>
+    </div>
+  </div>
+</div>
+

@@ -508,11 +508,15 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
 
     this.srService.vetorizarTif(tiffSelecionado, nomeLayer)
       .then(resultado => {
-        this.token = resultado;
         console.log(resultado);
         this.gerarTokenAdb(login, senha, resultado, projectId);
+        this.salvarArquivoCsv(resultado);
       })
       .catch(erro => this.errorHandler.handle(erro));
+
+  }
+
+  salvarArquivoCsv(json: string) {
 
   }
 
@@ -529,7 +533,7 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
   integrarAdb(token: string, json: string, projectId: string) {
     this.srService.integrarAdb(token, json, projectId)
         .then(json => {
-          console.log(json);
+          //console.log(json);
         })
         .catch(erro => this.errorHandler.handle(erro));
   }

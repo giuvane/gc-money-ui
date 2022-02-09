@@ -17,6 +17,9 @@ export class MoneyHttpInterceptor implements HttpInterceptor {
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
+      // interceptar chamada http para API do ADB-Map
+
+
       if (!req.url.includes('/oauth/token') && this.auth.isAccessTokenInvalido()) {
 
         return from(this.auth.obterNovoAccessToken())

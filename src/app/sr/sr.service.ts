@@ -41,7 +41,7 @@ export class SrService {
   agroApiUrl: string;
   agroApiKey: string;
 
-  constructor(private http: MoneyHttp, private httpClient: HttpClient,) {
+  constructor(private http: MoneyHttp, private httpClient: HttpClient) {
     // this.srUrl = `${environment.agroApiUrl}/polygons`;
     this.agroApiKey = '6475da62dd1776f8852048627272aad0'; // APIKEy do Agro API
     this.srUrl = `${environment.apiUrl}`;
@@ -207,7 +207,7 @@ export class SrService {
 
     const body = JSON.stringify({ login, password });
 
-    return this.http.post<any>(`${this.adbAuthbUrl}`, body, {
+    return this.httpClient.post<any>(`${this.adbAuthbUrl}`, body, {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/plain',
@@ -221,27 +221,35 @@ export class SrService {
       });
   }
 
+  private getHeaders(token: string): HttpHeaders {
+    return new HttpHeaders({
+      Authorization: token,
+      'Content-Type': 'application/json'
+    });
+  }
+
   integrarAdb(token: string, json: string, projectId: string): Promise<any> {
 
-    let headers = new HttpHeaders().append('Authorization', token);
-    headers = headers.append('Content-Type', 'application/json');
-    headers = headers.append('Accept', 'text/json');
+    //const body = JSON.stringify({ json });
+
+    const headers = new HttpHeaders()
+    .append('Authorization',  token )
+    .append('Content-Type', 'application/json');
 
     console.log(token);
     console.log(json);
 
-    return this.http.post<any>(`${this.adbUrl}/api/map/project/${projectId}/layer`, json,
+    return this.httpClient.post(`${this.adbUrl}/api/map/project/${projectId}/layer`, json, { headers }
+    /*
       {
-        headers: {
-          Authorization: token,
-          'Content-Type': 'application/json',
-          Accept: 'text/json',
-        }
+        headers: this.getHeaders(token)
       }
+*/
       )
       .toPromise()
       .then(response => {
         return response;
       });
+
   }
 }

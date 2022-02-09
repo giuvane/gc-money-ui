@@ -16,6 +16,7 @@ const routes: Routes = [
   { path: 'relatorios', loadChildren: './relatorios/relatorios.module#RelatoriosModule' },
   { path: 'mapas', loadChildren: './mapas/mapas.module#MapasModule' },
   { path: 'sr', loadChildren: './sr/sr.module#SrModule' },
+  { path: 'agroapikey', loadChildren: './agroapikey/agroapikey.module#AgroapikeyModule' },
 
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'nao-autorizado', component: NaoAutorizadoComponent },

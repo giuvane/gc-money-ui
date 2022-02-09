@@ -71,3 +71,20 @@ label {
   margin-left: 0.50em!important;
 }
 
+footer {
+  padding: 10px 0;
+  background-color: #1e94d2;
+}
+
+.footer-toggle {
+  color: #fff;
+}
+
+.teste-link {
+  color: #fff;
+}
+
+.teste-link:hover {
+	background:#fff;
+	color:#1e94d2;
+	}
