@@ -21,30 +21,30 @@
   <div class="ui-g">
       <div class="ui-g-12">
 
-        <!-- Lista de pessoas movida para o componente pessoas-grid -->
-        <!--<app-pessoas-grid [pessoas]="pessoas"></app-pessoas-grid>-->
         <p-table [value]="agroapikeys" [responsive]=true
           [paginator]="true" [rows]="filtro.itensPorPagina" [lazy]="true" [totalRecords]="totalRegistros"
           (onLazyLoad)="aoMudarPagina($event)"
           #tabela>
           <ng-template pTemplate="header">
               <tr>
-                <th>Nome</th>
+                <th>descrição</th>
                 <th>API Key</th>
+                <th>Usuário</th>
                 <th class="col-data"></th>
               </tr>
           </ng-template>
-          <ng-template pTemplate="body" let-pessoa>
-              <tr>
-                <td>{{ agroapikey.nome }}</td>
-                <td>{{ agroapikey.apikey }}</td>
-                <td class="col-acoes">
-                  <a class="espaco-icones" pButton pTooltip="Editar" tooltipPosition="top" icon="fa fa-pencil"
-                   [routerLink]="['/agroapikey', agroapikey.codigo]"></a>
-                  <button class="espaco-icones" pButton pTooltip="Excluir" tooltipPosition="top" icon="fa fa-trash"
-                    (click)="confirmarExclusao(agroapikey)"></button>
-                </td>
-              </tr>
+          <ng-template pTemplate="body" let-agroapikey>
+            <tr>
+              <td>{{ agroapikey.name }}</td>
+              <td>{{ agroapikey.apikey }}</td>
+              <td>{{ agroapikey.usuario }}</td>
+              <td class="col-acoes">
+                <a class="espaco-icones" pButton pTooltip="Editar" tooltipPosition="top" icon="fa fa-pencil"
+                  [routerLink]="['/agroapikey', agroapikey.codigo]"></a>
+                <button class="espaco-icones" pButton pTooltip="Excluir" tooltipPosition="top" icon="fa fa-trash"
+                  (click)="confirmarExclusao(agroapikey)"></button>
+              </td>
+            </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
               Nenhuma API Key encontrada

@@ -67,7 +67,7 @@ export class AgroApiKey {
   nome: string;
   apikey: string;
   ativo = true;
-  usuario: string;
+  codUsuario: number;
 }
 
 export class Area {
