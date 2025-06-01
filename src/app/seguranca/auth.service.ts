@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { environment } from './../../environments/environment';
+import { AgroApiKey } from '../core/model';
 
 @Injectable({
   providedIn: 'root'
@@ -34,8 +35,11 @@ export class AuthService {
 
     return this.http.post<any>(this.oauthTokenUrl, body, { headers, withCredentials: true })
       .toPromise()
-      .then(response => {
+      .then(async response => {
         this.armazenarToken(response.access_token);
+
+        const agroKey = await this.http.get<AgroApiKey>(`${environment.apiUrl}/usuario/agroapikey`).toPromise();
+        localStorage.setItem('agroApiKey', JSON.stringify(agroKey));
       })
       .catch(response => {
         if (response.status === 400) {

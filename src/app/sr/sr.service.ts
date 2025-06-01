@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { MoneyHttp } from '../seguranca/money-http';
 import { environment } from './../../environments/environment';
 
-import { Area, Product } from 'src/app/core/model';
+import { AgroApiKey, Area, Product } from 'src/app/core/model';
 import { TreeNode } from 'primeng/api';
 
 // Interface criada para obrigar que seja passada uma descricao no método pesquisar()
@@ -40,13 +40,23 @@ export class SrService {
   adbUrl: string
   agroApiUrl: string;
   agroApiKey: string;
+  agroApiKeyModel = new AgroApiKey();
+  
 
   constructor(private http: MoneyHttp, private httpClient: HttpClient) {
     // this.srUrl = `${environment.agroApiUrl}/polygons`;
-    this.agroApiKey = '6475da62dd1776f8852048627272aad0'; // APIKEy do Agro API
+    this.setupAgroApiKey()
     this.srUrl = `${environment.apiUrl}`;
     this.adbAuthbUrl = `${environment.adbAuth}`;
     this.adbUrl = `${environment.adb}`;
+  }
+
+  setupAgroApiKey() {
+    const savedKey = localStorage.getItem('agroApiKey');
+    if (savedKey) {
+      this.agroApiKeyModel = JSON.parse(savedKey);
+      this.agroApiKey = this.agroApiKeyModel.apikey;
+    }
   }
 
   carregarInformacoesPoligono(polyid: string) {
