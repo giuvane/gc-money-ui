@@ -184,3 +184,9 @@ export interface Product {
   image?:string;
   rating?:number;
 }
+
+export interface AdbProject {
+  id: string;
+  name: string;
+  description?: string;
+}

@@ -120,4 +120,72 @@
     </div>
 
   </form>
-</div>
+
+  <p-dialog
+    header="Login ADB"
+    [(visible)]="adbDialogVisible"
+    [modal]="true"
+    [closable]="true"
+    [style]="{width:'420px'}"
+    [contentStyle]="{overflow:'visible'}"
+    (onShow)="prefillAdbEmail()"
+  >
+    <div class="field">
+      <label>E-mail</label>
+      <input pInputText type="email" [(ngModel)]="adbEmail" (keyup.enter)="onConfirmAdbLogin()" autofocus>
+    </div>
+
+    <div class="field">
+      <label>Senha</label>
+      <input pInputText type="password" [(ngModel)]="adbPassword" (keyup.enter)="onConfirmAdbLogin()">
+    </div>
+
+    <div class="adb-actions">
+      <button pButton type="button" class="ui-button-secondary w-100" label="Cancelar" (click)="onCancelAdbLogin()"></button>
+      <button pButton type="button" class="w-100"
+              [label]="adbLoading ? 'Entrando...' : 'Entrar'"
+              [disabled]="adbLoading || !adbEmail || !adbPassword"
+              (click)="onConfirmAdbLogin()"></button>
+    </div>
+  </p-dialog>
+
+  <p-dialog
+  header="Selecione o Projeto ADB"
+  [(visible)]="adbProjectsDialogVisible"
+  [modal]="true"
+  [closable]="true"
+  [style]="{width:'420px'}"
+  [contentStyle]="{overflow:'visible'}">
+
+  <p-dropdown
+    [options]="adbProjects"
+    optionLabel="name"
+    placeholder="Selecione um projeto"
+    [(ngModel)]="adbProject"
+    (onChange)="onAdbProjectChange($event)"
+    [disabled]="adbProjectsLoading"
+    [style]="{width:'100%'}">
+  </p-dropdown>
+
+    <p-progressSpinner
+      *ngIf="adbProjectsLoading"
+      [style]="{width:'20px',height:'20px'}"
+      strokeWidth="6">
+    </p-progressSpinner>
+
+    <div class="adb-actions" style="margin-top: 1rem">
+      <button pButton
+              type="button"
+              label="Cancelar"
+              class="ui-button-secondary w-100"
+              (click)="adbProjectsDialogVisible = false"></button>
+      <button pButton
+              type="button"
+              label="Vetorizar"
+              class="w-100"
+              [disabled]="adbLoading || !adbProjectId"
+              (click)="onVetorizarParaProjeto()"></button>
+    </div>
+  </p-dialog>
+
+</div>  

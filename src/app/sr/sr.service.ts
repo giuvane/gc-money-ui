@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpBackend, HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { MoneyHttp } from '../seguranca/money-http';
 import { environment } from './../../environments/environment';
 
-import { AgroApiKey, Area, Product } from 'src/app/core/model';
+import { AdbProject, AgroApiKey, Area, Product } from 'src/app/core/model';
 import { TreeNode } from 'primeng/api';
 
 // Interface criada para obrigar que seja passada uma descricao no método pesquisar()
@@ -41,9 +41,14 @@ export class SrService {
   agroApiUrl: string;
   agroApiKey: string;
   agroApiKeyModel = new AgroApiKey();
+  private httpRaw: HttpClient;
   
 
-  constructor(private http: MoneyHttp, private httpClient: HttpClient) {
+  constructor(private http: MoneyHttp,
+              private httpClient: HttpClient,
+              httpBackend: HttpBackend) {
+    this.httpRaw = new HttpClient(httpBackend);
+
     // this.srUrl = `${environment.agroApiUrl}/polygons`;
     this.setupAgroApiKey()
     this.srUrl = `${environment.apiUrl}`;
@@ -199,13 +204,20 @@ export class SrService {
       .toPromise();
   }
 
-  vetorizarTif(link: string, nomeLayer: string): Promise<any> {
+  vetorizarTif(link: string, nomeLayer: string, adbToken: string, projectId?: string): Promise<any> {
 
     let params = new HttpParams();
     params = params.set('link', link);
     params = params.set('nomeLayer', nomeLayer);
+    params = params.set('adbToken', adbToken);
+    const body = {
+      link: link,
+      nomeLayer: nomeLayer,
+      adbToken: adbToken,
+      projectId: projectId
+    };
 
-    return this.http.get<any>(`${this.srUrl}/sr`, {params})
+    return this.http.post<any>(`${this.srUrl}/sr`, body)
       .toPromise()
       .then(response => {
         const json = response;
@@ -231,35 +243,13 @@ export class SrService {
       });
   }
 
-  private getHeaders(token: string): HttpHeaders {
-    return new HttpHeaders({
-      Authorization: token,
-      'Content-Type': 'application/json'
-    });
-  }
+  getAdbProjects(adbToken: string): Promise<AdbProject[]> {
+    const url = `${this.adbUrl}/api/map/project/`;
 
-  integrarAdb(token: string, json: string, projectId: string): Promise<any> {
+    const headers = new HttpHeaders().set('Authorization', adbToken); 
 
-    //const body = JSON.stringify({ json });
-
-    const headers = new HttpHeaders()
-    .append('Authorization',  token )
-    .append('Content-Type', 'application/json');
-
-    console.log(token);
-    console.log(json);
-
-    return this.httpClient.post(`${this.adbUrl}/api/map/project/${projectId}/layer`, json, { headers }
-    /*
-      {
-        headers: this.getHeaders(token)
-      }
-*/
-      )
-      .toPromise()
-      .then(response => {
-        return response;
-      });
-
+    return this.httpRaw
+      .get<AdbProject[]>(url, { headers })
+      .toPromise();
   }
 }

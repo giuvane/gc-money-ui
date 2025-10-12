@@ -1,0 +1,17 @@
+#drawMap{cursor:crosshair}
+
+/* só afeta o mapa de cadastro */
+#drawMap .ol-overlaycontainer-stopevent {
+  pointer-events: none !important;
+}
+
+#drawMap .ol-overlaycontainer-stopevent .ol-control,
+#drawMap .ol-overlaycontainer-stopevent .ol-zoom,
+#drawMap .ol-overlaycontainer-stopevent .ol-attribution,
+#drawMap .ol-overlaycontainer-stopevent button {
+  pointer-events: auto !important; /* controles continuam clicáveis */
+}
+
+/* opcional: UX de “mão” */
+#drawMap { cursor: grab; }
+#drawMap.dragging { cursor: grabbing; }

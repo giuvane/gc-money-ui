@@ -1,255 +1,158 @@
-import { Component, OnInit } from '@angular/core';
-import { FormControl, NgForm } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Title } from '@angular/platform-browser';
-
+// sr-cadastro.component.ts
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { NgForm } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ToastyService } from 'ng2-toasty';
-
 import { SrService } from '../sr.service';
 import { ErrorHandlerService } from 'src/app/core/error-handler.service';
 import { Area } from 'src/app/core/model';
-import { MessageService } from 'primeng/api';
 
-declare var google: any;
+import Map from 'ol/Map';
+import View from 'ol/View';
+import TileLayer from 'ol/layer/Tile';
+import XYZ from 'ol/source/XYZ';
+import {defaults as defaultInteractions} from 'ol/interaction';
+import VectorSource from 'ol/source/Vector';
+import VectorLayer from 'ol/layer/Vector';
+import {Draw, Modify, Snap} from 'ol/interaction';
+import {Style, Stroke, Fill} from 'ol/style';
+import GeoJSON from 'ol/format/GeoJSON';
+import {fromLonLat} from 'ol/proj';
 
 @Component({
   selector: 'app-sr-cadastro',
   templateUrl: './sr-cadastro.component.html',
   styleUrls: ['./sr-cadastro.component.css']
 })
-export class SrCadastroComponent implements OnInit {
+export class SrCadastroComponent implements OnInit, AfterViewInit {
 
   area = new Area();
 
-  // Maps
-  options: any;
-  overlays: any[];
-  selectedPosition: any;
-  dialogVisible: boolean;
-  markerTitle: string;
-  draggable: boolean;
-  infoWindow: any;
-  mapStyle: any;
-  map: any;
+  @ViewChild('drawMap', { static: false }) drawMapEl!: ElementRef<HTMLDivElement>;
 
-  // Polígono
-  poligono: any[];
-  poligono_geojson: any[];
-  pontos: any[];
-  coord: any;
+  private map!: Map;
+  private view!: View;
+  private drawSrc = new VectorSource();
+  private drawLayer = new VectorLayer({
+    source: this.drawSrc,
+    style: new Style({
+      stroke: new Stroke({ color: '#00bcd4', width: 2 }),
+      fill: new Fill({ color: 'rgba(0,188,212,0.20)' })
+    })
+  });
+
+  private draw!: Draw;
+  private modify!: Modify;
+  private snap!: Snap;
 
   constructor(
     private srService: SrService,
     private toasty: ToastyService,
     private errorHandler: ErrorHandlerService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private title: Title,
+    private router: Router
+  ) {}
 
-    private messageService: MessageService
-  ) {
-    this.map = google.maps.Map;
+  ngOnInit(): void {}
 
-   }
-
-  ngOnInit() {
-    this.options = {
-      center: {lat: -24.858674, lng: -54.336235},
-      zoom: 14
-    };
-
-    this.mapStyle = {
-      width: '100%',
-      height: '480px'
-    };
-
-    this.infoWindow = new google.maps.InfoWindow();
-
-    this.overlays = [];
-    this.poligono = [];
-    this.poligono_geojson = [];
-    this.pontos = [];
-    // this.poligono = google.maps.Polygon;
-    // this.coord = google.maps.LatLng;
-
-    // this.poligono.setStrokeColor('#FF9900');
-    // this.poligono.setFillColor('#FF9900');
-    // this.poligono.setStrokeOpacity(0.7);
-    // this.poligono.setFillOpacity(0.7);
-
+  ngAfterViewInit(): void {
+    this.initMap();
+    this.enableDraw(); // já entra no modo desenho
   }
 
-  setMap(event) {
-    this.map = event.map;
+  private initMap() {
+    this.view = new View({
+      center: fromLonLat([-54.336235, -24.858674]), // sua default city
+      zoom: 14,
+      minZoom: 1,
+      maxZoom: 19
+    });
 
-    // this.carregarGeoJson();
-    // this.iniciarOverlays();
-  }
-
-  handleMapClick(event) {
-    /*
-    // -=- Abre dialgo para adicionar novo marcador -=-
-    // event: MouseEvent of Google Maps api
-    this.selectedPosition = event.latLng;
-    this.dialogVisible = true;
-    this.messageService.add({
-      severity: 'info', detail: 'Lat: ' + this.selectedPosition.lat() + ' Long: ' + this.selectedPosition.lng() });
-    console.log(event);
-      */
-
-    /*
-    this.selectedPosition = event.latLng;
-    this.coord = new google.maps.LatLng(this.selectedPosition.lat(), this.selectedPosition.lng());
-    this.poligono.getPaths().add(this.coord);
-    console.log(this.poligono);
-    this.overlays.push(this.poligono);
-    */
-
-    this.selectedPosition = event.latLng;
-    this.poligono.push({ lat: this.selectedPosition.lat(), lng: this.selectedPosition.lng() });
-    this.pontos.push({ lat: this.selectedPosition.lat(), lng: this.selectedPosition.lng() });
-    //console.log(this.poligono);
-
-    this.poligono_geojson.push( [ this.selectedPosition.lat(), this.selectedPosition.lng() ] );
-    // console.log(this.poligono_geojson);
-
-
-
-    //console.log(this.area);
-
-    this.overlays = [
-      new google.maps.Polygon({ paths: [
-          this.poligono,
-      ], strokeOpacity: 0.5, strokeWeight: 1, fillColor: '#1976D2', fillOpacity: 0.35
+    const esriSat = new TileLayer({
+      source: new XYZ({
+        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attributions:
+          'Tiles © Esri — Sources: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
       }),
+      visible: true
+    });
 
-    ];
-    // this.overlays.push(new google.maps.Marker({ position: { lat: this.selectedPosition.lat(), lng: this.selectedPosition.lng() }, title: '' }));
+    this.map = new Map({
+      target: this.drawMapEl.nativeElement,
+      layers: [esriSat, this.drawLayer],
+      view: this.view,
+      interactions: defaultInteractions({ altShiftDragRotate: false, pinchRotate: false })
+    });
+
+    // editar vértices do polígono
+    this.modify = new Modify({ source: this.drawSrc });
+    this.map.addInteraction(this.modify);
+    // snapping nos vértices
+    this.snap = new Snap({ source: this.drawSrc });
+    this.map.addInteraction(this.snap);
+
+    setTimeout(() => {
+      const stop = this.map.getOverlayContainerStopEvent() as HTMLElement;
+      if (!stop) return;
+
+      // Desliga eventos do contêiner que bloqueia o pan/zoom
+      stop.style.pointerEvents = 'none';
+
+      // Mantém os controles clicáveis
+      stop.querySelectorAll('.ol-control, .ol-zoom, .ol-attribution, button')
+        .forEach(el => (el as HTMLElement).style.pointerEvents = 'auto');
+    }, 0);
   }
 
-  handleOverlayClick(event) {
-    // event.originalEvent: MouseEvent of Google Maps api
-    // event.overlay: Clicked overlay
-    // event.map: Map instance
-    this.selectedPosition = event.originalEvent.latLng;
-    this.messageService.add({
-      severity: 'info', detail: 'Lat: ' + this.selectedPosition.lat() + ' Long: ' + this.selectedPosition.lng() });
+  /** habilita ferramenta de desenho (um único polígono) */
+  private enableDraw() {
+    // só 1 feature ao mesmo tempo
+    this.drawSrc.clear();
+    if (this.draw) this.map.removeInteraction(this.draw);
 
-    console.log(event.originalEvent);
-    console.log(event.overlay);
-    console.log(event.map);
+    this.draw = new Draw({
+      source: this.drawSrc,
+      type: 'Polygon',
+      finishCondition: (e) => true
+    });
 
-    const isMarker = event.overlay.getTitle !== undefined;
+    // fecha desenho com duplo clique
+    this.draw.on('drawend', () => {
+      // nada aqui: já fica editável pelo Modify
+    });
 
-    if (isMarker) {
-        const title = event.overlay.getTitle();
-        this.infoWindow.setContent('<div>' + title + '</div>');
-        this.infoWindow.open(event.map, event.overlay);
-        event.map.setCenter(event.overlay.getPosition());
-
-        this.messageService.add({severity: 'info', summary: 'Marcador selecionado', detail: title});
-    } else {
-        this.messageService.add({severity: 'info', summary: 'Shape selecionado', detail: ''});
-    }
+    this.map.addInteraction(this.draw);
   }
 
-  handleDragEnd(event) {
-    this.messageService.add({severity: 'info', summary: 'Marcador movido', detail: event.overlay.getTitle()});
-  }
-
-  addMarker() {
-    this.overlays.push(new google.maps.Marker({
-      position:
-      {
-        lat: this.selectedPosition.lat(),
-        lng: this.selectedPosition.lng()
-      },
-      title: this.markerTitle,
-      draggable: this.draggable
-    }));
-    this.markerTitle = null;
-    this.dialogVisible = false;
-  }
-
-  iniciarOverlays() {
-
-    const imageBounds = {
-      north: 40.773941,
-      south: 40.712216,
-      east: -74.12544,
-      west: -74.22655
-    };
-
-    this.overlays = [
-      new google.maps.Marker({ position: { lat: 36.879466, lng: 30.667648 }, title: 'Konyaalti' }),
-      new google.maps.Marker({ position: { lat: 36.883707, lng: 30.689216 }, title: 'Ataturk Park' }),
-      new google.maps.Marker({ position: { lat: 36.885233, lng: 30.702323 }, title: 'Oldtown' }),
-      new google.maps.Polygon({ paths: [
-          {lat: 36.9177, lng: 30.7854},
-          {lat: 36.8851, lng: 30.7802},
-          {lat: 36.8829, lng: 30.8111},
-          {lat: 36.9177, lng: 30.8159}
-      ], strokeOpacity: 0.5, strokeWeight: 1, fillColor: '#1976D2', fillOpacity: 0.35
-      }),
-      new google.maps.Circle({ center:
-        {lat: 36.90707, lng: 30.56533},
-        fillColor: '#1976D2', fillOpacity: 0.35, strokeWeight: 1, radius: 1500}),
-      new google.maps.Polyline({path: [
-        {lat: 36.86149, lng: 30.63743},
-        {lat: 36.86341, lng: 30.72463}],
-        geodesic: true, strokeColor: '#FF0000', strokeOpacity: 0.5, strokeWeight: 2}),
-      new google.maps.GroundOverlay(
-        'https://www.lib.utexas.edu/maps/historical/newark_nj_1922.jpg',
-        imageBounds)
-    ];
-  }
-
-  carregarGeoJson() {
-    this.map.data.loadGeoJson(
-      'https://storage.googleapis.com/mapsdevsite/json/google.json');
-  }
-
+  /** Remove qualquer polígono atual e recomeça o desenho */
   limpar() {
-    this.overlays = [];
-    this.poligono = [];
+    this.drawSrc.clear();
+    this.enableDraw();
   }
 
+  /** Converte a feature desenhada para GeoJSON EPSG:4326 e envia */
   salvar(form: NgForm) {
-    // if (this.editando) {
-    //   this.atualizarPessoa(form);
-    // } else {
-    //   this.adicionarPessoa(form);
-    // }
+    const feat = this.drawSrc.getFeatures()[0];
+    if (!feat) {
+      this.toasty.warning('Desenhe um polígono antes de salvar.');
+      return;
+    }
 
-    this.adicionarArea(form);
-  }
-
-  adicionarArea(form: NgForm) {
-
-    let primeiro = this.poligono[0];
-
-    this.poligono_geojson.push( [ primeiro.lat, primeiro.lng ] );
+    const gj = new GeoJSON().writeFeatureObject(feat, {
+      dataProjection: 'EPSG:4326',
+      featureProjection: 'EPSG:3857'
+    });
 
     this.area.geo_json = {
       type: 'Feature',
       properties: {},
-      geometry: {
-          type: 'Polygon',
-          coordinates: [this.poligono_geojson]
-        }
+      geometry: gj.geometry
     };
 
-    console.log(this.area);
-
     this.srService.adicionar(this.area)
-      .then(areaAdicionada => {
-        this.toasty.success('Pessoa adicionada com sucesso!');
-
-        // form.reset();
-        // this.lancamento = new Lancamento();
+      .then(() => {
+        this.toasty.success('Área adicionada com sucesso!');
         this.router.navigate(['/sr']);
       })
       .catch(erro => this.errorHandler.handle(erro));
   }
-
 }
