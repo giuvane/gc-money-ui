@@ -1,1 +1,53 @@
-<p>agroapikey-cadastro works!</p>
+<div class="container">
+  <form #f="ngForm" autocomplete="off" (ngSubmit)="salvar(f)">
+
+    <div class="ui-g">
+      <div class="ui-g-12">
+          <h1>{{ editando ? 'Edição de' : 'Nova' }} API Key</h1>
+      </div>
+      <div class="ui-g-12 ui-fluid">
+        <label>ApiKey</label>
+        <input pInputText type="text" name="apiKey"       
+          [(ngModel)]="agroApiKey.apikey"
+          #apiKey="ngModel" required minlength="5">
+      <app-message [control]="apiKey" error="required" text="Informe a apiKey"></app-message>
+      </div>
+
+      <div class="ui-g-12 ui-fluid">
+        <label>Descricao ApiKey</label>
+        <input pInputText type="text" name="name"       
+          [(ngModel)]="agroApiKey.name"
+          #name="ngModel" required minlength="5">
+      <app-message [control]="name" error="required" text="Informe a descrição"></app-message>
+      </div>
+
+      <ng-container *ngIf="!editando">
+
+      <div class="ui-g-12 ui-md-8 ui-fluid">
+        <label>usuário</label>
+      
+          <p-dropdown
+            placeholder="Selecione..."
+            [filter]="true"
+            [options]="usuarios"
+            [(ngModel)]="usuarioSelecionado"
+            name="usuarioSelecionado"
+            #usuario="ngModel"
+            required>
+          </p-dropdown>
+        
+          <app-message [control]="usuario" error="required" text="Informe o usuário"></app-message>
+      </div>
+    </ng-container>
+
+      
+
+      <div class="ui-g-12">
+        <button class="espaco-icones" pButton type="submit" label="Salvar" [disabled]="f.invalid"></button>
+        <a class="espaco-icones" routerLink="/agroapikey">Voltar para a pesquisa</a>
+      </div>
+    </div>
+
+  </form>
+</div>
+

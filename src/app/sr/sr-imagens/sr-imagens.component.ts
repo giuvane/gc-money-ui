@@ -9,6 +9,10 @@ import OSM from 'ol/source/OSM';
 import TileLayer from 'ol/layer/Tile';
 import XYZ from 'ol/source/XYZ';
 import BingMaps from 'ol/source/BingMaps';
+import {defaults as defaultInteractions} from 'ol/interaction';
+import DragPan from 'ol/interaction/DragPan';
+import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
+import Kinetic from 'ol/Kinetic';
 
 import * as Proj from 'ol/proj';
 import * as gdal from 'gdal';
@@ -19,7 +23,7 @@ import { ToastyService } from 'ng2-toasty';
 import { ErrorHandlerService } from 'src/app/core/error-handler.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
-import { MessageService } from 'primeng/api';
+import { MessageService, SelectItem } from 'primeng/api';
 import {TreeNode} from 'primeng/api';
 
 import { ImagensFiltro, SrService } from '../sr.service';
@@ -30,6 +34,13 @@ import { AreaImagem, EstatisticaTable } from './../../core/model';
 import { Table } from 'primeng/components/table/table';
 import { stringify } from 'querystring';
 import { analyzeAndValidateNgModules } from '@angular/compiler';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import Feature from 'ol/Feature';
+import Polygon from 'ol/geom/Polygon';
+import {fromLonLat} from 'ol/proj';
+import {Style, Stroke, Fill} from 'ol/style';
+import GeoJSON from 'ol/format/GeoJSON';
 
 interface IV {
   name: string;
@@ -84,8 +95,16 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
   dataEstatistica: string = '';
   tituloEstatistica: string = '';
 
+  adbDialogVisible = false;
+  adbProjectsDialogVisible = false;
+  adbLoading = false;
+  adbEmail = '';
+  adbPassword = '';
+  rememberAdbEmail = true; // salva no localStorage
+  private pendingTiff: { tiff: string; nomeLayer: string } | null = null;
+
   // Open Layers
-  @ViewChild('map', {static: false}) public mapEl: ElementRef;
+  @ViewChild('map', { static: false }) mapEl!: ElementRef<HTMLDivElement>;
   public state: any;
   map: Map;
   layers: any[];
@@ -127,6 +146,81 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
   // ADB
   token: string;
 
+  adbProjects: Array<{ id: string; name: string }> = [];
+  adbProjectsLoading = false;
+  adbProjectOptions: SelectItem[] = []; 
+  adbProject: { id: string; name: string } | null = null;
+  adbProjectId: string | null;
+
+  private footprintsSrc = new VectorSource();
+  private footprintsLayer = new VectorLayer({
+  source: this.footprintsSrc,
+  style: new Style({
+    stroke: new Stroke({ color: '#00bcd4', width: 2 }),
+    fill: new Fill({ color: 'rgba(0,188,212,0.15)' })
+  })
+});
+
+private isLatLon(pair: number[]): boolean {
+  if (!pair || pair.length < 2) { return false; }
+  var a = pair[0], b = pair[1];
+  return Math.abs(a) <= 90 && Math.abs(b) <= 180 && Math.abs(b) > Math.abs(a);
+}
+
+/** Converte anel [[lat,lon],...] -> [[lon,lat],...] */
+private swapRing(ring: number[][]): number[][] {
+  var out: number[][] = [];
+  for (var i = 0; i < ring.length; i++) {
+    var p = ring[i];
+    out.push([p[1], p[0]]);
+  }
+  return out;
+}
+
+/** Normaliza seu geo_json: aceita [lat,lon] e corrige para [lon,lat] */
+private normalizeGeoJson(geojson: any): any {
+  // clone raso
+  var g = JSON.parse(JSON.stringify(geojson || {}));
+  if (!g || !g.geometry) { return g; }
+
+  var geom = g.geometry;
+  if (geom.type === 'Polygon' && geom.coordinates && geom.coordinates.length > 0) {
+    var ring = geom.coordinates[0];
+    if (ring && ring.length > 0 && this.isLatLon(ring[0])) {
+      geom.coordinates = [ this.swapRing(ring) ];
+    }
+  } else if (geom.type === 'MultiPolygon' && geom.coordinates && geom.coordinates.length > 0) {
+    // supondo [[ring]] por polígono
+    var polys = geom.coordinates;
+    for (var p = 0; p < polys.length; p++) {
+      var firstRing = polys[p] && polys[p][0];
+      if (firstRing && firstRing.length > 0 && this.isLatLon(firstRing[0])) {
+        polys[p] = [ this.swapRing(firstRing) ];
+      }
+    }
+    geom.coordinates = polys;
+  }
+  return g;
+}
+
+/** Desenha o GeoJSON (WGS84) e faz fit no mapa */
+drawAreaGeoJson(geo_json: any) {
+  var fixed = this.normalizeGeoJson(geo_json);
+
+  var feat = new GeoJSON().readFeature(fixed, {
+    dataProjection: 'EPSG:4326',
+    featureProjection: 'EPSG:3857'
+  });
+
+  this.footprintsSrc.clear();
+  this.footprintsSrc.addFeature(feat);
+
+  var geom: any = feat.getGeometry && feat.getGeometry();
+  if (geom && geom.getExtent) {
+    this.view.fit(geom.getExtent(), { padding: [40,40,40,40], duration: 250 });
+  }
+}
+
   constructor(
     private srService: SrService,
     private toasty: ToastyService,
@@ -136,14 +230,6 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
     private title: Title,
     private messageService: MessageService
   ) {
-      // Criando mapa Bing
-      this.bingMap = new TileLayer({
-        source: new BingMaps({
-          imagerySet: 'AerialWithLabels',
-          key:  environment.bingMapsKey,
-        }),
-      });
-
       this.ivs = [
         {name: 'NDVI', code: 'ndvi'},
         {name: 'EVI', code: 'evi'},
@@ -180,15 +266,15 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
    }
 
   ngOnInit() {
-
     this.idArea = this.route.snapshot.params['codigo'];
     console.log(this.idArea);
 
-    this.carregarInformacoesArea();
+    const last = localStorage.getItem('adb_email');
+    if (last) this.adbEmail = last;
   }
 
   ngAfterViewInit(): void {
-
+    this.carregarInformacoesArea();
   }
 
   carregarInformacoesArea() {
@@ -198,24 +284,69 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
         console.log(this.area);
 
         this.carregarMapa();
+
+        if (this.area.geo_json) {
+          this.drawAreaGeoJson(this.area.geo_json);
+        }
     })
     .catch(erro => this.errorHandler.handle(erro));
   }
 
   carregarMapa() {
-    this.view = new View({
+   this.view = new View({
       center: Proj.fromLonLat([this.area.center[0], this.area.center[1]]),
       zoom: 16,
-      minZoom: 1,
-      maxZoom: 19,
+      minZoom: 2,
+      maxZoom: 18,        
+      constrainResolution: true,
+      smoothExtentConstraint: true
     });
 
-    this.map = new Map({
-      //controls: [],
-      layers: [this.bingMap],
-      target: this.mapEl.nativeElement,
-      view: this.view,
+    const osm = new TileLayer({
+    source: new OSM(),
+    visible: true
     });
+
+    const esriSat = new TileLayer({
+      source: new XYZ({
+        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attributions: 'Tiles © Esri — Sources: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+      }),
+      visible: true
+    });
+
+    // 3) Cria o mapa (AGORA o mapEl existe)
+    this.map = new Map({
+      target: this.mapEl.nativeElement,
+      layers: [esriSat, this.footprintsLayer],
+      view: this.view,
+      interactions: defaultInteractions({
+        altShiftDragRotate: false,
+        pinchRotate: false,
+      })
+      .extend([
+        new DragPan({ kinetic: new Kinetic(-0.005, 0.05, 100) }),
+        new MouseWheelZoom()
+      ])
+    });
+
+    this.map.on('pointerdrag', () => this.mapEl.nativeElement.classList.add('dragging'));
+    this.map.on('pointerup',   () => this.mapEl.nativeElement.classList.remove('dragging'));
+
+    setTimeout(() => {
+  const stop = this.map.getTargetElement()
+    .querySelector('.ol-overlaycontainer-stopevent') as HTMLElement;
+  if (stop) {
+    stop.style.pointerEvents = 'none';
+    stop.querySelectorAll('.ol-control').forEach(el => {
+      (el as HTMLElement).style.pointerEvents = 'auto';
+    });
+  }
+}, 0);
+
+  // 4) Garante resize após renderizar/painéis
+  //setTimeout(() => this.map?.updateSize(), 0);
+  //window.addEventListener('resize', () => this.map?.updateSize());
   }
 
   carregarLayer(areaImagem: AreaImagem) {
@@ -231,7 +362,7 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
     } else if (this.selectedIv.code === 'dswi') {
       camada = areaImagem.tile.dswi;
     } else if (this.selectedIv.code === 'ndwi') {
-      camada = areaImagem.tile.ndvi;
+      camada = areaImagem.tile.ndwi;
     } else if (this.selectedIv.code === 'nri') {
       camada = areaImagem.tile.nri;
     } else if (this.selectedIv.code === 'rgb') {
@@ -479,11 +610,6 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
   }
 
   lerTiff(event) {
-
-    let login = 'giuvane.conti@gmail.com';
-    let senha = '123456';
-    let projectId = '6009c5932a0457001a17c319';
-
     let tiffSelecionado;
 
     if (this.selectedIv.code === 'ndvi') {
@@ -504,38 +630,92 @@ export class SrImagensComponent implements OnInit, AfterViewInit {
       tiffSelecionado = this.imagemSelecionada.data.falsecolor;
     }
 
-    let nomeLayer = 'teste';
+    const nomeLayer = this.buildSafeLayerName();
 
-    this.srService.vetorizarTif(tiffSelecionado, nomeLayer)
-      .then(resultado => {
-        console.log(resultado);
-        this.gerarTokenAdb(login, senha, resultado, projectId);
-        this.salvarArquivoCsv(resultado);
+    this.pendingTiff = { tiff: tiffSelecionado, nomeLayer };
+    this.adbDialogVisible = true;
+  }
+
+  private buildSafeLayerName(): string {
+    if (!this.imagemSelecionada || !this.imagemSelecionada.dt) return 'layer';
+
+    const d = this.unixTimestampToDate(this.imagemSelecionada.dt);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+
+    let name = `${this.imagemSelecionada.type}_${y}-${m}-${day}`;
+    name = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    name = name.replace(/[^\w-]+/g, '_');
+    if (name.length > 60) name = name.slice(0, 60);
+    return name;
+  }
+
+  onConfirmAdbLogin() {
+    if (!this.adbEmail || !this.adbPassword || !this.pendingTiff) {
+      this.toasty.warning('Informe e-mail, senha e selecione uma imagem.');
+      return;
+    }
+
+    this.adbLoading = true;
+
+    if (this.rememberAdbEmail) localStorage.setItem('adb_email', this.adbEmail);
+    else localStorage.removeItem('adb_email');
+
+    this.srService.gerarTokenAdb(this.adbEmail, this.adbPassword)
+      .then(token => {
+        this.token = token;
+        this.adbPassword = '';            
+        this.adbProjectsLoading = true;
+        console.log("Tokem: " + token)
+        return this.srService.getAdbProjects(token);
       })
-      .catch(erro => this.errorHandler.handle(erro));
-
+      .then(projects => {
+        this.adbProjects = (projects || []).map(p => ({ id: p.id, name: p.name }));
+        this.adbProjectOptions = this.adbProjects.map(p => ({ label: p.name, value: p.id }));
+        this.adbDialogVisible = false;
+        this.adbProjectsDialogVisible = true;
+      })
+      .catch(err => this.errorHandler.handle(err))
+      .finally(() => {
+        this.adbLoading = false;
+        this.adbProjectsLoading = false;
+      });
   }
 
-  salvarArquivoCsv(json: string) {
+  onCancelAdbLogin() {
+    this.adbDialogVisible = false;
+    this.pendingTiff = null;
+    this.adbPassword = '';
+  }
+  
+  onVetorizarParaProjeto() {
+    if (!this.pendingTiff || !this.token) {
+      this.toasty.warning('Faça o login no ADB e selecione a imagem.');
+      return;
+    }
+    if (!this.adbProjectId) {
+      this.toasty.warning('Selecione um projeto do ADB.');
+      return;
+    }
 
+    const { tiff, nomeLayer } = this.pendingTiff;
+    this.adbLoading = true;
+
+    console.log("TIFF: " + tiff);
+
+    this.srService.vetorizarTif(tiff, nomeLayer, this.token, this.adbProjectId)
+      .then(() => {
+        this.toasty.success('Vetorizar enviado ao ADB com sucesso!');
+        this.adbProjectsDialogVisible = false;
+        this.pendingTiff = null;
+      })
+      .catch(err => this.errorHandler.handle(err))
+      .finally(() => this.adbLoading = false);
   }
 
-  gerarTokenAdb(login: string, senha: string, json: string, projectId: string) {
-    this.srService.gerarTokenAdb(login, senha)
-        .then(resultado => {
-          const token = resultado;
-          //console.log(token);
-          this.integrarAdb(token, json, projectId);
-        })
-        .catch(erro => this.errorHandler.handle(erro));
-  }
-
-  integrarAdb(token: string, json: string, projectId: string) {
-    this.srService.integrarAdb(token, json, projectId)
-        .then(json => {
-          //console.log(json);
-        })
-        .catch(erro => this.errorHandler.handle(erro));
+  onAdbProjectChange(e: any) {
+    this.adbProjectId = e && e.value ? e.value.id : null;
   }
 
   downloadPng() {

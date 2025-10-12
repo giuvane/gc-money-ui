@@ -14,6 +14,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { InputMaskModule } from 'primeng/inputmask';
 import { PanelModule } from 'primeng/panel';
 import { DialogModule } from 'primeng/dialog';
+import { FormsModule } from '@angular/forms';
+import { DropdownModule } from 'primeng/dropdown';
 
 
 
@@ -22,6 +24,7 @@ import { DialogModule } from 'primeng/dialog';
   imports: [
     CommonModule,
 
+    FormsModule,
     InputTextModule,
     ButtonModule,
     TableModule,
@@ -29,6 +32,7 @@ import { DialogModule } from 'primeng/dialog';
     InputMaskModule,
     PanelModule,
     DialogModule,
+    DropdownModule,
 
     SharedModule,
     AgroapikeyRoutingModule

@@ -67,7 +67,7 @@ export class AgroApiKey {
   nome: string;
   apikey: string;
   ativo = true;
-  usuario: string;
+  codUsuario: number;
 }
 
 export class Area {
@@ -183,4 +183,10 @@ export interface Product {
   category?:string;
   image?:string;
   rating?:number;
+}
+
+export interface AdbProject {
+  id: string;
+  name: string;
+  description?: string;
 }

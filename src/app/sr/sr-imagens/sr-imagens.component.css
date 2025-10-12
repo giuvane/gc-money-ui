@@ -1,7 +1,28 @@
 #map {
   height: 600px;
   width: 100%;
+  position: relative;
+  cursor: grab;
 }
+#map.dragging { cursor: grabbing; }
+
+/* Não bloquear eventos no overlay */
+#map .ol-overlaycontainer,
+#map .ol-overlaycontainer-stopevent {
+  pointer-events: none;
+}
+
+/* …mas manter botões/controles clicáveis */
+#map .ol-overlaycontainer .ol-control,
+#map .ol-overlaycontainer-stopevent .ol-control,
+#map .ol-overlaycontainer .ol-zoom,
+#map .ol-overlaycontainer-stopevent .ol-zoom {
+  pointer-events: auto;
+}
+
+.adb-actions { margin-top: 12px; display: grid; gap: 8px; }
+.w-100 { width: 100%; }
+.field { margin-bottom: 10px; }
 
 .product-item {
   display: flex;
